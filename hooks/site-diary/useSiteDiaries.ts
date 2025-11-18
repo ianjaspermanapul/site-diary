@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { SiteDiary } from '@/app/api/graphql+api';
 import { GET_SITE_DIARIES } from '@/lib/graphql/queries';
-import { graphqlRequest } from '@/lib/graphql/client';
+import { graphqlRequest, NetworkError } from '@/lib/graphql/client';
 import { siteDiaryKeys } from '@/lib/react-query/queryKeys';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
@@ -26,6 +26,15 @@ export function useSiteDiaries() {
     // Don't refetch when offline
     refetchOnMount: !isOffline,
     refetchOnReconnect: true,
+    retry: (failureCount, error) => {
+      // Don't retry if offline
+      if (isOffline) return false;
+      // Don't retry network errors (they'll be retried on reconnect)
+      if (error instanceof NetworkError && error.isOffline) return false;
+      // Retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   return {

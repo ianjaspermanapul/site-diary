@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import CustomText from '@/components/ui/CustomText';
 import { useWeeklySummary } from '@/hooks/site-diary/useWeeklySummary';
+import { NetworkError } from '@/lib/graphql/client';
 
 interface WeeklySummaryModalProps {
   visible: boolean;
@@ -41,18 +42,46 @@ function ApiKeyMissingState() {
   );
 }
 
-function ErrorState({ error, onRetry }: { error: Error; onRetry: () => void }) {
+function ErrorState({ 
+  error, 
+  onRetry, 
+  isOffline 
+}: { 
+  error: Error; 
+  onRetry: () => void;
+  isOffline?: boolean;
+}) {
+  const getErrorMessage = () => {
+    if (error instanceof NetworkError) {
+      return isOffline
+        ? 'You\'re offline. Weekly summaries require an internet connection.'
+        : 'Unable to generate summary. Please check your internet connection.';
+    }
+    return error.message || 'Failed to generate summary. Please try again.';
+  };
+
   return (
     <View style={styles.centerContainer}>
-      <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+      <Ionicons 
+        name={isOffline ? "cloud-offline-outline" : "alert-circle-outline"} 
+        size={48} 
+        color="#ef4444" 
+      />
       <CustomText variant="bodyMedium" style={styles.errorText}>
-        {error.message}
+        {getErrorMessage()}
       </CustomText>
-      <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-        <CustomText variant="bodyMedium" style={styles.retryButtonText}>
-          Retry
+      {!isOffline && (
+        <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+          <CustomText variant="bodyMedium" style={styles.retryButtonText}>
+            Retry
+          </CustomText>
+        </TouchableOpacity>
+      )}
+      {isOffline && (
+        <CustomText variant="secondarySmall" style={styles.infoText}>
+          Connect to the internet to generate weekly summaries
         </CustomText>
-      </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -76,18 +105,19 @@ function EmptyState() {
 }
 
 export function WeeklySummaryModal({ visible, onClose }: WeeklySummaryModalProps) {
-  const { summary, loading, error, refetch, isApiKeyMissing } = useWeeklySummary();
+  const { summary, loading, error, refetch, isApiKeyMissing, isOffline } = useWeeklySummary();
 
   const renderContent = (
     loading: boolean,
     isApiKeyMissing: boolean,
     error: Error | null | undefined,
     summary: string | null | undefined,
-    onRetry: () => void
+    onRetry: () => void,
+    isOffline?: boolean
   ) => {
     if (loading) return <LoadingState />;
     if (isApiKeyMissing) return <ApiKeyMissingState />;
-    if (error) return <ErrorState error={error} onRetry={onRetry} />;
+    if (error) return <ErrorState error={error} onRetry={onRetry} isOffline={isOffline} />;
     if (summary) return <SummaryContent summary={summary} />;
     return <EmptyState />;
   };
@@ -110,7 +140,7 @@ export function WeeklySummaryModal({ visible, onClose }: WeeklySummaryModalProps
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {renderContent(loading, isApiKeyMissing, error, summary, refetch)}
+            {renderContent(loading, isApiKeyMissing, error, summary, refetch, isOffline)}
           </ScrollView>
         </View>
       </View>

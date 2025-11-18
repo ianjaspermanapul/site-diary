@@ -19,6 +19,7 @@ import { useSiteDiaries } from '@/hooks/site-diary/useSiteDiaries';
 import { useWeeklySummary } from '@/hooks/site-diary/useWeeklySummary';
 import { useEffect, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
+import { NetworkError } from '@/lib/graphql/client';
 
 export default function Home() {
   const router = useRouter();
@@ -56,12 +57,42 @@ export default function Home() {
     router.push('/site-diary/create');
   };
 
-  if (error && !isOffline) {
+  const getErrorMessage = () => {
+    if (!error) return '';
+    
+    if (error instanceof NetworkError) {
+      return isOffline
+        ? 'You\'re offline. Showing cached data.'
+        : 'Unable to load site diaries. Please check your internet connection.';
+    }
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Network') || error.message.includes('connection')) {
+        return isOffline
+          ? 'You\'re offline. Showing cached data.'
+          : 'Unable to load site diaries. Please check your internet connection.';
+      }
+      return error.message;
+    }
+    
+    return 'Failed to load site diaries. Please try again.';
+  };
+
+  if (error && !isOffline && siteDiaries.length === 0) {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Site Diaries' }} />
         <Container>
-          <Text style={styles.errorText}>Error: {error.message}</Text>
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+            <Text style={styles.errorText}>{getErrorMessage()}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+              <Ionicons name="refresh" size={16} color="#fff" style={styles.retryIcon} />
+              <Text style={styles.retryButtonText}>
+                {isRefetching ? 'Retrying...' : 'Retry'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </Container>
       </View>
     );
@@ -131,9 +162,35 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    gap: 16,
+  },
   errorText: {
     color: '#ef4444',
     fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 8,
+  },
+  retryIcon: {
+    marginRight: 4,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   listContainer: {
     gap: 12,

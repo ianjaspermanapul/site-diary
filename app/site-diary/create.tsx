@@ -16,9 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import CustomText from '@/components/ui/CustomText';
 import { TextInput } from '@/components/ui/TextInput';
 import { DatePickerModal } from '@/components/ui/DatePickerModal';
-import { graphqlRequest } from '@/lib/graphql/client';
-import { CREATE_SITE_DIARY } from '@/lib/graphql/queries';
-import { siteDiaryKeys } from '@/lib/react-query/queryKeys';
+import { NetworkError, GraphQLError } from '@/lib/graphql/client';
 import { formatDateString } from '@/lib/utils/date';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -26,15 +24,47 @@ import {
   getInitialValues,
   SiteDiaryFormValues,
 } from '@/lib/validation/siteDiarySchema';
-import { queryClient } from '@/lib/react-query/client';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useCreateSiteDiary } from '@/hooks/site-diary/useCreateSiteDiary';
 
 export default function CreateSiteDiary() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isOffline } = useNetworkStatus();
+  const { createSiteDiary, isCreating, error: mutationError, reset } = useCreateSiteDiary();
   const [newAttendee, setNewAttendee] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleError = (error: Error) => {
+    console.error('Error creating site diary:', error);
+
+    let errorMessage = 'Failed to create site diary. Please try again.';
+    let errorTitle = 'Error';
+
+    if (error instanceof NetworkError) {
+      errorTitle = 'Connection Error';
+      errorMessage =
+        error.message ||
+        'Unable to connect to the server. Please check your internet connection and try again.';
+    } else if (error instanceof GraphQLError) {
+      errorTitle = 'Validation Error';
+      errorMessage = error.message || 'Invalid data. Please check your input and try again.';
+    } else if (error instanceof Error) {
+      if (error.message.includes('timeout') || error.message.includes('timed out')) {
+        errorTitle = 'Timeout';
+        errorMessage =
+          'The request took too long. Please check your internet connection and try again.';
+      } else if (error.message.includes('Network') || error.message.includes('connection')) {
+        errorTitle = 'Connection Error';
+        errorMessage =
+          'Unable to connect to the server. Please check your internet connection and try again.';
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+    }
+
+    Alert.alert(errorTitle, errorMessage, [{ text: 'OK', style: 'default', onPress: reset }]);
+  };
 
   const formik = useFormik<SiteDiaryFormValues>({
     initialValues: getInitialValues(),
@@ -48,29 +78,23 @@ export default function CreateSiteDiary() {
       try {
         const id = `cm${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
 
-        await graphqlRequest(CREATE_SITE_DIARY, {
-          input: {
-            id,
-            date: values.date,
-            title: values.title.trim(),
-            createdBy: 'Current User', // TODO: Get from auth context
-            content: values.content?.trim() || undefined,
-            weather:
-              values.weatherCondition || values.temperature
-                ? {
-                    temperature: values.temperature ? parseInt(values.temperature, 10) : 20,
-                    description: values.weatherCondition || 'sunny',
-                  }
-                : undefined,
-            attendees:
-              values.attendees && values.attendees.length > 0 ? values.attendees : undefined,
-            attachments:
-              values.attachments && values.attachments.length > 0 ? values.attachments : undefined,
-          },
+        await createSiteDiary({
+          id,
+          date: values.date,
+          title: values.title.trim(),
+          createdBy: 'Current User', // TODO: Get from auth context
+          content: values.content?.trim() || undefined,
+          weather:
+            values.weatherCondition || values.temperature
+              ? {
+                  temperature: values.temperature ? parseInt(values.temperature, 10) : 20,
+                  description: values.weatherCondition || 'sunny',
+                }
+              : undefined,
+          attendees: values.attendees && values.attendees.length > 0 ? values.attendees : undefined,
+          attachments:
+            values.attachments && values.attachments.length > 0 ? values.attachments : undefined,
         });
-
-        // Invalidate queries to refresh the list
-        queryClient.invalidateQueries({ queryKey: siteDiaryKeys.all });
 
         Alert.alert('Success', 'Site diary created successfully', [
           {
@@ -79,12 +103,11 @@ export default function CreateSiteDiary() {
           },
         ]);
       } catch (error) {
-        console.error('Error creating site diary:', error);
-        const errorMessage =
-          error instanceof Error && error.message.includes('Network')
-            ? 'Network error. Please check your internet connection.'
-            : 'Failed to create site diary. Please try again.';
-        Alert.alert('Error', errorMessage);
+        if (error instanceof Error) {
+          handleError(error);
+        } else {
+          handleError(new Error('An unexpected error occurred'));
+        }
       }
     },
   });
@@ -364,14 +387,11 @@ export default function CreateSiteDiary() {
           </View>
         )}
         <TouchableOpacity
-          style={[
-            styles.saveButton,
-            (formik.isSubmitting || isOffline) && styles.saveButtonDisabled,
-          ]}
+          style={[styles.saveButton, (isCreating || isOffline) && styles.saveButtonDisabled]}
           onPress={() => formik.handleSubmit()}
-          disabled={formik.isSubmitting || isOffline}>
+          disabled={isCreating || isOffline}>
           <CustomText variant="bodyMedium" style={styles.saveButtonText}>
-            {isOffline ? 'Offline - Cannot Save' : formik.isSubmitting ? 'Saving...' : 'Save Diary'}
+            {isOffline ? 'Offline - Cannot Save' : isCreating ? 'Saving...' : 'Save Diary'}
           </CustomText>
         </TouchableOpacity>
       </View>
