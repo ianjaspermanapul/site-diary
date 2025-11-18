@@ -6,6 +6,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -19,20 +20,28 @@ import { useIsFocused } from '@react-navigation/native';
 
 export default function Home() {
   const router = useRouter();
-  const { siteDiaries, loading, error, refetch, isRefetching } = useSiteDiaries();
+  const { siteDiaries, loading, error, refetch, isRefetching, isOffline } = useSiteDiaries();
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    if (isFocused) {
+    if (isFocused && !isOffline) {
       refetch();
     }
-  }, [isFocused]);
+  }, [isFocused, isOffline]);
 
   const renderItem = ({ item }: ListRenderItemInfo<SiteDiary>) => {
     return <SiteDiaryListItem details={item} />;
   };
 
-  if (error) {
+  const handleAddPress = () => {
+    if (isOffline) {
+      Alert.alert('Offline', 'You need an internet connection to create a site diary.');
+      return;
+    }
+    router.push('/site-diary/create');
+  };
+
+  if (error && !isOffline) {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Site Diaries' }} />
@@ -51,6 +60,12 @@ export default function Home() {
           headerStyle: { backgroundColor: '#F2F2F2' },
         }}
       />
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
+          <Text style={styles.offlineText}>You're offline. Showing cached data.</Text>
+        </View>
+      )}
       <View style={styles.content}>
         {loading ? (
           <SiteDiaryListItemSkeleton />
@@ -60,16 +75,27 @@ export default function Home() {
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
-            onRefresh={refetch}
+            onRefresh={!isOffline ? refetch : undefined}
             refreshing={isRefetching}
+            ListEmptyComponent={
+              isOffline && siteDiaries.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No cached data available</Text>
+                  <Text style={styles.emptySubtext}>
+                    Connect to the internet to load site diaries
+                  </Text>
+                </View>
+              ) : null
+            }
           />
         )}
       </View>
       <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/site-diary/create')}
-        activeOpacity={0.8}>
-        <Ionicons name="add" size={24} color="white" />
+        style={[styles.fab, isOffline && styles.fabDisabled]}
+        onPress={handleAddPress}
+        activeOpacity={0.8}
+        disabled={isOffline}>
+        <Ionicons name="add" size={24} color={isOffline ? '#9ca3af' : 'white'} />
       </TouchableOpacity>
     </View>
   );
@@ -89,6 +115,35 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     gap: 12,
+  },
+  offlineBanner: {
+    backgroundColor: '#f59e0b',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  offlineText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
   },
   fab: {
     position: 'absolute',
@@ -110,5 +165,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     // Android shadow
     elevation: 8,
+  },
+  fabDisabled: {
+    backgroundColor: '#e5e7eb',
   },
 });

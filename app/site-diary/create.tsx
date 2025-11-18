@@ -27,10 +27,12 @@ import {
   SiteDiaryFormValues,
 } from '@/lib/validation/siteDiarySchema';
 import { queryClient } from '@/lib/react-query/client';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 export default function CreateSiteDiary() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isOffline } = useNetworkStatus();
   const [newAttendee, setNewAttendee] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -38,6 +40,11 @@ export default function CreateSiteDiary() {
     initialValues: getInitialValues(),
     validationSchema: siteDiaryValidationSchema,
     onSubmit: async (values) => {
+      if (isOffline) {
+        Alert.alert('Offline', 'You need an internet connection to create a site diary.');
+        return;
+      }
+
       try {
         const id = `cm${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
 
@@ -73,7 +80,11 @@ export default function CreateSiteDiary() {
         ]);
       } catch (error) {
         console.error('Error creating site diary:', error);
-        Alert.alert('Error', 'Failed to create site diary. Please try again.');
+        const errorMessage =
+          error instanceof Error && error.message.includes('Network')
+            ? 'Network error. Please check your internet connection.'
+            : 'Failed to create site diary. Please try again.';
+        Alert.alert('Error', errorMessage);
       }
     },
   });
@@ -344,12 +355,23 @@ export default function CreateSiteDiary() {
 
       {/* Save Button */}
       <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+        {isOffline && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
+            <CustomText variant="secondarySmall" style={styles.offlineText}>
+              You're offline. Internet connection required to save.
+            </CustomText>
+          </View>
+        )}
         <TouchableOpacity
-          style={[styles.saveButton, formik.isSubmitting && styles.saveButtonDisabled]}
+          style={[
+            styles.saveButton,
+            (formik.isSubmitting || isOffline) && styles.saveButtonDisabled,
+          ]}
           onPress={() => formik.handleSubmit()}
-          disabled={formik.isSubmitting}>
+          disabled={formik.isSubmitting || isOffline}>
           <CustomText variant="bodyMedium" style={styles.saveButtonText}>
-            {formik.isSubmitting ? 'Saving...' : 'Save Diary'}
+            {isOffline ? 'Offline - Cannot Save' : formik.isSubmitting ? 'Saving...' : 'Save Diary'}
           </CustomText>
         </TouchableOpacity>
       </View>
@@ -488,6 +510,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
+  },
+  offlineBanner: {
+    backgroundColor: '#f59e0b',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
+    borderRadius: 8,
+  },
+  offlineText: {
+    color: '#fff',
+    fontWeight: '500',
   },
   saveButton: {
     backgroundColor: '#6366f1',
