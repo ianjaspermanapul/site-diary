@@ -1,10 +1,11 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { SiteDiary } from '@/app/api/graphql+api';
 import { formatDateString } from '@/lib/utils/date';
 import { WeatherCard } from './WeatherCard';
 import { AttendeeCard } from './AttendeeCard';
 import { AttachmentThumbnail } from './AttachmentThumbnail';
+import { PhotoViewer } from '../ui/PhotoViewer';
 import CustomText from '../ui/CustomText';
 
 interface Props {
@@ -13,9 +14,12 @@ interface Props {
 
 export const SiteDiaryDetails = ({ siteDiary }: Props) => {
   const formattedDate = formatDateString(siteDiary.date, 'D MMMM YYYY');
+  const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
         {/* Title and Date */}
         <View style={styles.header}>
@@ -51,7 +55,15 @@ export const SiteDiaryDetails = ({ siteDiary }: Props) => {
             <CustomText variant="sectionTitle">Attachments</CustomText>
             <View style={styles.attachmentsContainer}>
               {siteDiary.attachments.map((attachment, index) => (
-                <AttachmentThumbnail key={index} uri={attachment} />
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setSelectedPhotoIndex(index);
+                    setPhotoViewerVisible(true);
+                  }}
+                  activeOpacity={0.8}>
+                  <AttachmentThumbnail uri={attachment} />
+                </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -66,6 +78,15 @@ export const SiteDiaryDetails = ({ siteDiary }: Props) => {
         )}
       </View>
     </ScrollView>
+
+    {/* Photo Viewer Modal */}
+    <PhotoViewer
+      visible={photoViewerVisible}
+      images={siteDiary.attachments || []}
+      initialIndex={selectedPhotoIndex}
+      onClose={() => setPhotoViewerVisible(false)}
+    />
+    </>
   );
 };
 
