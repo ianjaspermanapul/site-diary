@@ -15,10 +15,20 @@ import SiteDiaryListItem from '@/components/site-diary/SiteDiaryListItem';
 import SiteDiaryListItemSkeleton from '@/components/site-diary/SiteDiaryListItemSkeleton';
 import { SiteDiary } from './api/graphql+api';
 import { useSiteDiaries } from '@/hooks/site-diary/useSiteDiaries';
+import { useFocusEffect } from 'expo-router';
+import { useEffect } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function Home() {
   const router = useRouter();
   const { siteDiaries, loading, error, refetch } = useSiteDiaries();
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (isFocused) {
+      refetch();
+    }
+  }, [isFocused]);
 
   const renderItem = ({ item }: ListRenderItemInfo<SiteDiary>) => {
     return <SiteDiaryListItem details={item} />;

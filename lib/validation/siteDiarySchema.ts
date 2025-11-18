@@ -42,8 +42,8 @@ export const getInitialValues = (): SiteDiaryFormValues => ({
   date: new Date().toISOString().split('T')[0],
   title: '',
   content: '',
-  weatherCondition: 'Sunny',
-  temperature: '24',
+  weatherCondition: '',
+  temperature: '',
   attendees: [],
   attachments: [],
 });
