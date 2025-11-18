@@ -2,6 +2,10 @@
 
 A React Native mobile application built with Expo for managing construction site diary entries. Features include offline support, AI-powered weekly summaries, and a modern, intuitive user interface.
 
+## 🎥 Demo Video
+
+**👉 [Watch the Demo on Loom](https://www.loom.com/share/93bc141bb3294dbd876504538ceb36da)**
+
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
