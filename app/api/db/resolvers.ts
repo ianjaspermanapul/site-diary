@@ -1,4 +1,6 @@
 import { prisma } from './client';
+import dayjs from 'dayjs';
+import { generateWeeklySummary } from '../../../lib/ai/summarize';
 
 // Helper function to transform Prisma data to GraphQL format
 function transformSiteDiary(diary: any) {
@@ -44,6 +46,62 @@ export const resolvers = {
         },
       });
       return diary ? transformSiteDiary(diary) : null;
+    },
+    weeklySummary: async () => {
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OPENAI_API_KEY is not configured. Please add it to your .env file.');
+      }
+      // Get date range for past 7 days
+      const today = dayjs();
+      const sevenDaysAgo = today.subtract(7, 'days');
+      const startDate = sevenDaysAgo.format('YYYY-MM-DD');
+      const endDate = today.format('YYYY-MM-DD');
+
+      // Fetch diaries from the past week
+      const diaries = await prisma.siteDiary.findMany({
+        where: {
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        include: {
+          weather: true,
+          attendees: true,
+        },
+        orderBy: {
+          date: 'asc',
+        },
+      });
+
+      if (diaries.length === 0) {
+        return 'No site diary entries found for the past week.';
+      }
+
+      // Transform diaries for AI
+      const formattedDiaries = diaries.map((diary: any) => ({
+        date: diary.date,
+        title: diary.title,
+        content: diary.content,
+        createdBy: diary.createdBy,
+        weather: diary.weather
+          ? {
+              temperature: diary.weather.temperature,
+              description: diary.weather.description,
+            }
+          : null,
+        attendees: diary.attendees?.map((a: any) => a.name) || [],
+      }));
+
+      // Generate AI summary
+      try {
+        const summary = await generateWeeklySummary(formattedDiaries);
+        return summary;
+      } catch (error) {
+        console.error('Error generating weekly summary:', error);
+        // Fallback to a simple summary if AI fails
+        return `Weekly Summary: ${diaries.length} site diary entries recorded from ${startDate} to ${endDate}. Key activities include: ${diaries.map((d: any) => d.title).join(', ')}.`;
+      }
     },
   },
   Mutation: {

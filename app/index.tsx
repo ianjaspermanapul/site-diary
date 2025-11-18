@@ -13,15 +13,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { Container } from '@/components/Container';
 import SiteDiaryListItem from '@/components/site-diary/SiteDiaryListItem';
 import SiteDiaryListItemSkeleton from '@/components/site-diary/SiteDiaryListItemSkeleton';
+import { WeeklySummaryModal } from '@/components/site-diary/WeeklySummaryModal';
 import { SiteDiary } from './api/graphql+api';
 import { useSiteDiaries } from '@/hooks/site-diary/useSiteDiaries';
-import { useEffect } from 'react';
+import { useWeeklySummary } from '@/hooks/site-diary/useWeeklySummary';
+import { useEffect, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 
 export default function Home() {
   const router = useRouter();
   const { siteDiaries, loading, error, refetch, isRefetching, isOffline } = useSiteDiaries();
+  const { isApiKeyMissing, refetch: checkApiKey } = useWeeklySummary();
   const isFocused = useIsFocused();
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [hasCheckedApiKey, setHasCheckedApiKey] = useState(false);
+
+  // Check API key availability once on mount
+  useEffect(() => {
+    if (!hasCheckedApiKey && !isOffline) {
+      // Try to fetch summary to check if API key is available
+      checkApiKey().finally(() => {
+        setHasCheckedApiKey(true);
+      });
+    }
+  }, [hasCheckedApiKey, isOffline, checkApiKey]);
 
   useEffect(() => {
     if (isFocused && !isOffline) {
@@ -58,6 +73,11 @@ export default function Home() {
         options={{
           title: 'Site Diaries',
           headerStyle: { backgroundColor: '#F2F2F2' },
+          headerRight: () => (
+            <TouchableOpacity onPress={() => setShowSummaryModal(true)} style={styles.headerButton}>
+              <Ionicons name="sparkles-outline" size={24} color="#6366f1" />
+            </TouchableOpacity>
+          ),
         }}
       />
       {isOffline && (
@@ -97,6 +117,8 @@ export default function Home() {
         disabled={isOffline}>
         <Ionicons name="add" size={24} color={isOffline ? '#9ca3af' : 'white'} />
       </TouchableOpacity>
+
+      <WeeklySummaryModal visible={showSummaryModal} onClose={() => setShowSummaryModal(false)} />
     </View>
   );
 }
@@ -168,5 +190,9 @@ const styles = StyleSheet.create({
   },
   fabDisabled: {
     backgroundColor: '#e5e7eb',
+  },
+  headerButton: {
+    padding: 8,
+    marginRight: 8,
   },
 });

@@ -55,6 +55,7 @@ const schema = createSchema({
     type Query {
       siteDiaries: [SiteDiary!]!
       siteDiary(id: String!): SiteDiary
+      weeklySummary: String
     }
 
     type Mutation {

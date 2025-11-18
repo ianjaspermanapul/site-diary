@@ -54,3 +54,8 @@ export const CREATE_SITE_DIARY = `
   }
 `;
 
+export const GET_WEEKLY_SUMMARY = `
+  query {
+    weeklySummary
+  }
+`;
