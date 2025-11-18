@@ -29,7 +29,7 @@ export const resolvers = {
           attachments: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          date: 'desc',
         },
       });
       return diaries.map(transformSiteDiary);
@@ -101,4 +101,3 @@ export const resolvers = {
     },
   },
 };
-
