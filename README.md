@@ -83,7 +83,7 @@ OPENAI_API_KEY="sk-your-api-key-here"
 
 - **`DATABASE_URL`** (Required)
   - SQLite database connection string
-  - Format: `file:./app/api/db/dev.db` (relative to the schema file location)
+  - Format: `file:./dev.db` (relative to the schema file location)
   - The database file will be created at `app/api/db/dev.db`
 
 - **`OPENAI_API_KEY`** (Optional)
@@ -189,15 +189,31 @@ app/api/db/dev.db
 
 ## Technical Choices / Focus Areas
 
-<!-- Add your technical choices and focus areas here -->
+- I've opted not to use any design libraries and created the components from scratch for more flexibility
+- For the database, as we're dealing with a relatively small application and data, and for the portability of the app/exam, I opted to use **`Prisma + SQLite`** instead of PostgreSQL. Note: I've added the sample Site Diary items into a seed file so you can have sample initial data for the list
+- Additionally, implementing Prisma + SQLite, I implemented mutations/creation of Site Diary items.
+- I used GraphQL as expected but since I don't need any services exclusive to Apollo like Subscriptions, etc. I also opted to use a more lightweight request library, **`Tanstack's React Query`** to give me more control when updating lists globally as well as handling cache for **`offline support`**.
+- As mentioned at the item above, there's offline support implemented that makes use of cache for already-queried Site Diary item and list. Creation is disabled when the user is offline.
+- I've added some minor libraries for the user's convenience for example, adding date pickers and photo pickers when creating site diery items.
+- I've also implemented a very simple AI prompt to summarize the entries in the site diary list for the most recent week
 
 ## Future Improvements
 
-<!-- Add your planned future improvements here -->
+There are improvements that I would do for the application if in case this is turned into a full-blown app
+
+- Update and Delete for Site Diary items.
+- An auto complete for the attendees if ever the attendee is a registered user
+- Maybe more information regarding the weather? Windspeed (If that's relevant in any case)
+- Authentication for any logging/tracking of user activities
 
 ## AI Usage for Development
 
-<!-- Add information about AI tools and assistance used during development here -->
+- Implementation wise, I've implemented AI using OpenAI to produce a weekly summary for the most recent week in the site diary entries. This functionaklity is optional and will be available if an API Key is provided in the .env file.
+- Development wise, I used AI for polishing code in the screens and components but I could confidently say that majority of the lines of codes are done by me.
+
+I've mentioned this to Anthony that I normally use AI for scaffolding code and doing the grunt work, but 99% of the time, I deal with the business logic to make sure that the workflow is intended.
+
+I also used AI to build this very well constructed README file but I reviewed it to make sure that the generated file is also tailored and specific for running this app, for example, the required .env fields, etc.
 
 ---
 
