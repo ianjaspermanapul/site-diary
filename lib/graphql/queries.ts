@@ -6,14 +6,6 @@ export const GET_SITE_DIARIES = `
       id
       date
       title
-      createdBy
-      content
-      weather {
-        temperature
-        description
-      }
-      attendees
-      attachments
     }
   }
 `;

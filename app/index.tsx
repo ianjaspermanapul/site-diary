@@ -29,6 +29,8 @@ export default function Home() {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [hasCheckedApiKey, setHasCheckedApiKey] = useState(false);
 
+  console.log('siteDiaries: ', siteDiaries);
+
   // Check API key availability once on mount
   useEffect(() => {
     if (!hasCheckedApiKey && !isOffline) {
@@ -59,22 +61,22 @@ export default function Home() {
 
   const getErrorMessage = () => {
     if (!error) return '';
-    
+
     if (error instanceof NetworkError) {
       return isOffline
-        ? 'You\'re offline. Showing cached data.'
+        ? "You're offline. Showing cached data."
         : 'Unable to load site diaries. Please check your internet connection.';
     }
-    
+
     if (error instanceof Error) {
       if (error.message.includes('Network') || error.message.includes('connection')) {
         return isOffline
-          ? 'You\'re offline. Showing cached data.'
+          ? "You're offline. Showing cached data."
           : 'Unable to load site diaries. Please check your internet connection.';
       }
       return error.message;
     }
-    
+
     return 'Failed to load site diaries. Please try again.';
   };
 
@@ -88,9 +90,7 @@ export default function Home() {
             <Text style={styles.errorText}>{getErrorMessage()}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
               <Ionicons name="refresh" size={16} color="#fff" style={styles.retryIcon} />
-              <Text style={styles.retryButtonText}>
-                {isRefetching ? 'Retrying...' : 'Retry'}
-              </Text>
+              <Text style={styles.retryButtonText}>{isRefetching ? 'Retrying...' : 'Retry'}</Text>
             </TouchableOpacity>
           </View>
         </Container>
