@@ -18,7 +18,7 @@ import { useSiteDiaries } from '@/hooks/site-diary/useSiteDiaries';
 
 export default function Home() {
   const router = useRouter();
-  const { siteDiaries, loading, error } = useSiteDiaries();
+  const { siteDiaries, loading, error, refetch } = useSiteDiaries();
 
   const renderItem = ({ item }: ListRenderItemInfo<SiteDiary>) => {
     return <SiteDiaryListItem details={item} />;
@@ -52,6 +52,8 @@ export default function Home() {
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
+            onRefresh={refetch}
+            refreshing={loading}
           />
         )}
       </View>

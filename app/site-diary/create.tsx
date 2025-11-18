@@ -45,6 +45,18 @@ export default function CreateSiteDiary() {
             date: values.date,
             title: values.title.trim(),
             createdBy: 'Current User', // TODO: Get from auth context
+            content: values.content?.trim() || undefined,
+            weather:
+              values.weatherCondition || values.temperature
+                ? {
+                    temperature: values.temperature ? parseInt(values.temperature, 10) : 20,
+                    description: values.weatherCondition || 'sunny',
+                  }
+                : undefined,
+            attendees:
+              values.attendees && values.attendees.length > 0 ? values.attendees : undefined,
+            attachments:
+              values.attachments && values.attachments.length > 0 ? values.attachments : undefined,
           },
         });
 

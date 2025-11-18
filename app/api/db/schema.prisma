@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SiteDiary {
+  id          String   @id @default(cuid())
+  date        String
+  title       String
+  content     String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  weather     Weather?
+  attendees   Attendee[]
+  attachments Attachment[]
+}
+
+model Weather {
+  id          String   @id @default(cuid())
+  siteDiaryId String   @unique
+  siteDiary   SiteDiary @relation(fields: [siteDiaryId], references: [id], onDelete: Cascade)
+  temperature Int
+  description String
+}
+
+model Attendee {
+  id          String   @id @default(cuid())
+  siteDiaryId String
+  siteDiary   SiteDiary @relation(fields: [siteDiaryId], references: [id], onDelete: Cascade)
+  name        String
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  siteDiaryId String
+  siteDiary   SiteDiary @relation(fields: [siteDiaryId], references: [id], onDelete: Cascade)
+  uri         String
+}
+

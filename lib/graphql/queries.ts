@@ -43,6 +43,13 @@ export const CREATE_SITE_DIARY = `
       date
       title
       createdBy
+      content
+      weather {
+        temperature
+        description
+      }
+      attendees
+      attachments
     }
   }
 `;

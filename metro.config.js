@@ -5,4 +5,10 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
+// Exclude seed files and other Node.js-only files from bundling
+config.resolver.blockList = [
+  ...(config.resolver.blockList || []),
+  /app\/api\/db\/seed\.ts$/,
+];
+
 module.exports = config;
