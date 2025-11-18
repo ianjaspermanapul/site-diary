@@ -9,8 +9,6 @@ A React Native mobile application built with Expo for managing construction site
 - [Environment Variables](#environment-variables)
 - [Starting the Application](#starting-the-application)
 - [Database Setup](#database-setup)
-- [Project Structure](#project-structure)
-- [Available Scripts](#available-scripts)
 - [Technical Choices / Focus Areas](#technical-choices--focus-areas)
 - [Future Improvements](#future-improvements)
 - [AI Usage for Development](#ai-usage-for-development)
@@ -188,52 +186,6 @@ app/api/db/dev.db
 ```
 
 **Note:** The database file is in `.gitignore` and will not be committed to version control.
-
-## Project Structure
-
-```
-coding-test-mobile-main/
-├── app/                    # Expo Router app directory
-│   ├── api/                # API routes
-│   │   ├── db/             # Prisma database setup
-│   │   │   ├── schema.prisma
-│   │   │   ├── client.ts
-│   │   │   ├── resolvers.ts
-│   │   │   └── seed.ts
-│   │   └── graphql+api.ts  # GraphQL API endpoint
-│   ├── site-diary/         # Site diary screens
-│   ├── index.tsx           # Home screen
-│   └── _layout.tsx         # Root layout
-├── components/             # Reusable components
-│   ├── site-diary/         # Site diary components
-│   └── ui/                 # UI components
-├── hooks/                  # Custom React hooks
-│   ├── site-diary/         # Site diary hooks
-│   └── useNetworkStatus.ts
-├── lib/                    # Utility libraries
-│   ├── ai/                 # AI integration
-│   ├── graphql/            # GraphQL client & queries
-│   ├── react-query/        # React Query setup
-│   └── utils/              # Utility functions
-├── assets/                  # Images and static assets
-├── .env                    # Environment variables (not in git)
-└── package.json
-```
-
-## Available Scripts
-
-- **`npm start`** - Start Expo development server
-- **`npm run ios`** - Run on iOS simulator
-- **`npm run android`** - Run on Android emulator
-- **`npm run web`** - Run in web browser
-- **`npm run lint`** - Run ESLint and Prettier checks
-- **`npm run format`** - Auto-fix ESLint issues and format code
-- **`npm run prebuild`** - Generate iOS and Android native projects
-- **`npm run db:generate`** - Generate Prisma Client
-- **`npm run db:migrate`** - Run database migrations
-- **`npm run db:push`** - Push schema changes to database
-- **`npm run db:studio`** - Open Prisma Studio
-- **`npm run db:seed`** - Seed database with sample data
 
 ## Technical Choices / Focus Areas
 
