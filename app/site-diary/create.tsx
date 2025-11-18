@@ -124,13 +124,15 @@ export default function CreateSiteDiary() {
         options={{
           title: 'New Site Diary',
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+            <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#111827" />
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-              <CustomText variant="secondary">Cancel</CustomText>
+            <TouchableOpacity onPress={() => router.back()}>
+              <CustomText variant="secondary" style={styles.headerButtonText}>
+                Cancel
+              </CustomText>
             </TouchableOpacity>
           ),
           headerStyle: {
@@ -282,7 +284,6 @@ export default function CreateSiteDiary() {
                   </View>
                   <View style={styles.attendeeInfo}>
                     <CustomText variant="bodyMedium">{attendee}</CustomText>
-                    <CustomText variant="secondarySmall">Role</CustomText>
                   </View>
                   <TouchableOpacity onPress={() => removeAttendee(index)}>
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
@@ -484,7 +485,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  headerButton: {},
+  headerButtonText: {
+    color: '#6366f1',
+  },
   errorText: {
     color: '#ef4444',
     marginTop: 4,
