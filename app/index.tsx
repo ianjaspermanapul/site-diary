@@ -5,7 +5,6 @@ import {
   StyleSheet,
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,13 +14,12 @@ import SiteDiaryListItem from '@/components/site-diary/SiteDiaryListItem';
 import SiteDiaryListItemSkeleton from '@/components/site-diary/SiteDiaryListItemSkeleton';
 import { SiteDiary } from './api/graphql+api';
 import { useSiteDiaries } from '@/hooks/site-diary/useSiteDiaries';
-import { useFocusEffect } from 'expo-router';
 import { useEffect } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 
 export default function Home() {
   const router = useRouter();
-  const { siteDiaries, loading, error, refetch } = useSiteDiaries();
+  const { siteDiaries, loading, error, refetch, isRefetching } = useSiteDiaries();
   const isFocused = useIsFocused();
 
   useEffect(() => {
@@ -63,7 +61,7 @@ export default function Home() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
             onRefresh={refetch}
-            refreshing={loading}
+            refreshing={isRefetching}
           />
         )}
       </View>

@@ -18,6 +18,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { DatePickerModal } from '@/components/ui/DatePickerModal';
 import { graphqlRequest } from '@/lib/graphql/client';
 import { CREATE_SITE_DIARY } from '@/lib/graphql/queries';
+import { siteDiaryKeys } from '@/lib/react-query/queryKeys';
 import { formatDateString } from '@/lib/utils/date';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -25,6 +26,7 @@ import {
   getInitialValues,
   SiteDiaryFormValues,
 } from '@/lib/validation/siteDiarySchema';
+import { queryClient } from '@/lib/react-query/client';
 
 export default function CreateSiteDiary() {
   const router = useRouter();
@@ -59,6 +61,9 @@ export default function CreateSiteDiary() {
               values.attachments && values.attachments.length > 0 ? values.attachments : undefined,
           },
         });
+
+        // Invalidate queries to refresh the list
+        queryClient.invalidateQueries({ queryKey: siteDiaryKeys.all });
 
         Alert.alert('Success', 'Site diary created successfully', [
           {

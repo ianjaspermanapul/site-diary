@@ -21,6 +21,7 @@
     "@prisma/client": "^5.20.0",
     "@react-native-community/datetimepicker": "^8.5.0",
     "@react-navigation/native": "^7.1.6",
+    "@tanstack/react-query": "^5.90.10",
     "dayjs": "^1.11.19",
     "expo": "^54.0.0",
     "expo-constants": "~18.0.9",

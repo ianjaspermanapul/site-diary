@@ -1,40 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { SiteDiary } from '@/app/api/graphql+api';
 import { GET_SITE_DIARIES } from '@/lib/graphql/queries';
 import { graphqlRequest } from '@/lib/graphql/client';
+import { siteDiaryKeys } from '@/lib/react-query/queryKeys';
 
 type SiteDiariesResponse = {
   siteDiaries: SiteDiary[];
 };
 
+async function fetchSiteDiaries(): Promise<SiteDiary[]> {
+  const data = await graphqlRequest<SiteDiariesResponse>(GET_SITE_DIARIES);
+  return data.siteDiaries;
+}
+
 export function useSiteDiaries() {
-  const [siteDiaries, setSiteDiaries] = useState<SiteDiary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchSiteDiaries = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await graphqlRequest<SiteDiariesResponse>(GET_SITE_DIARIES);
-      setSiteDiaries(data.siteDiaries);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to fetch site diaries');
-      setError(error);
-      console.error('Error fetching site diaries:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSiteDiaries();
-  }, []);
+  const query = useQuery({
+    queryKey: siteDiaryKeys.lists(),
+    queryFn: fetchSiteDiaries,
+  });
 
   return {
-    siteDiaries,
-    loading,
-    error,
-    refetch: fetchSiteDiaries,
+    siteDiaries: query.data || [],
+    loading: query.isLoading,
+    error: query.error as Error | null,
+    refetch: query.refetch,
+    isRefetching: query.isRefetching,
   };
 }
