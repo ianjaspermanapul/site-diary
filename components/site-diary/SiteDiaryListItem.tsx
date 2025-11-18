@@ -1,11 +1,11 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { SiteDiary } from '@/app/api/graphql+api';
 import { formatDateString } from '@/lib/utils/date';
 import { router } from 'expo-router';
+import CustomText from '@/components/ui/CustomText';
 
 interface Props {
   details: SiteDiary;
@@ -25,9 +25,9 @@ const SiteDiaryListItem = ({ details }: Props) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.container}>
       <View style={styles.content}>
-        <View>
-          <Text>{title}</Text>
-          <Text>{formattedDate}</Text>
+        <View style={styles.textContainer}>
+          <CustomText variant="bodyMedium">{title}</CustomText>
+          <CustomText variant="secondarySmall">{formattedDate}</CustomText>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
       </View>
@@ -59,5 +59,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  textContainer: {
+    gap: 4,
   },
 });
