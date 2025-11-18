@@ -30,10 +30,12 @@ export const siteDiaryValidationSchema = Yup.object().shape({
     }),
   attendees: Yup.array()
     .of(Yup.string().min(1, 'Attendee name cannot be empty').max(100, 'Attendee name too long'))
-    .max(50, 'Maximum 50 attendees allowed'),
+    .max(50, 'Maximum 50 attendees allowed')
+    .optional(),
   attachments: Yup.array()
-    .of(Yup.string().url('Attachment must be a valid URL'))
-    .max(20, 'Maximum 20 attachments allowed'),
+    .of(Yup.string().required('Attachment URI is required'))
+    .max(20, 'Maximum 20 attachments allowed')
+    .optional(),
 });
 
 export const getInitialValues = (): SiteDiaryFormValues => ({
