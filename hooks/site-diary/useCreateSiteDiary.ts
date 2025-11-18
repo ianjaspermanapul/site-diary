@@ -55,4 +55,3 @@ export function useCreateSiteDiary() {
     reset: mutation.reset,
   };
 }
-

@@ -1,28 +1,113 @@
-import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import CustomText from '@/components/ui/CustomText';
 
 import { useSiteDiary } from '@/hooks/site-diary/useSiteDiary';
 import { SiteDiaryDetails } from '@/components/site-diary/SiteDiaryDetails';
 import { NetworkError } from '@/lib/graphql/client';
 
+// Loading State Component
+function LoadingState() {
+  return (
+    <View style={styles.centerContainer}>
+      <ActivityIndicator size="large" color="#6366f1" />
+      <CustomText variant="secondary" style={styles.loadingText}>
+        Loading site diary...
+      </CustomText>
+    </View>
+  );
+}
+
+// Error State Component
+function ErrorState({
+  error,
+  isOffline,
+  isRefetching,
+  onRetry,
+}: {
+  error: Error;
+  isOffline: boolean;
+  isRefetching: boolean;
+  onRetry: () => void;
+}) {
+  const errorMessage = useMemo(() => {
+    if (error instanceof NetworkError) {
+      return isOffline
+        ? "You're offline. This site diary is not available in cache."
+        : 'Unable to load site diary. Please check your internet connection.';
+    }
+    return error.message || 'Failed to load site diary. Please try again.';
+  }, [error, isOffline]);
+
+  const iconName = isOffline ? 'cloud-offline-outline' : 'alert-circle-outline';
+
+  return (
+    <View style={styles.centerContainer}>
+      <Ionicons name={iconName} size={48} color="#ef4444" />
+      <CustomText variant="bodyMedium" style={styles.errorText}>
+        {errorMessage}
+      </CustomText>
+      {!isOffline && (
+        <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+          <Ionicons name="refresh" size={16} color="#fff" style={styles.retryIcon} />
+          <CustomText variant="bodyMedium" style={styles.retryButtonText}>
+            {isRefetching ? 'Retrying...' : 'Retry'}
+          </CustomText>
+        </TouchableOpacity>
+      )}
+      {isOffline && (
+        <CustomText variant="secondarySmall" style={styles.offlineHint}>
+          Connect to the internet to view this site diary
+        </CustomText>
+      )}
+    </View>
+  );
+}
+
+// Not Found State Component
+function NotFoundState() {
+  return (
+    <View style={styles.centerContainer}>
+      <Ionicons name="document-outline" size={48} color="#6b7280" />
+      <CustomText variant="bodyMedium" style={styles.errorText}>
+        Site diary not found
+      </CustomText>
+    </View>
+  );
+}
+
 export default function SiteDiaryDetailsPage() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { siteDiary, loading, error, refetch, isRefetching, isOffline } = useSiteDiary(id as string);
+  const { siteDiary, loading, error, refetch, isRefetching, isOffline } = useSiteDiary(
+    id as string
+  );
 
-  const getErrorMessage = () => {
-    if (!error) return '';
-    
-    if (error instanceof NetworkError) {
-      return isOffline
-        ? 'You\'re offline. This site diary is not available in cache.'
-        : 'Unable to load site diary. Please check your internet connection.';
+  // Determine which content to render - early return pattern
+  const content = useMemo(() => {
+    if (loading) {
+      return <LoadingState />;
     }
-    
-    return error.message || 'Failed to load site diary. Please try again.';
-  };
+
+    if (error) {
+      return (
+        <ErrorState
+          error={error}
+          isOffline={isOffline}
+          isRefetching={isRefetching}
+          onRetry={refetch}
+        />
+      );
+    }
+
+    if (siteDiary) {
+      return <SiteDiaryDetails siteDiary={siteDiary} />;
+    }
+
+    return <NotFoundState />;
+  }, [loading, error, siteDiary, isOffline, isRefetching, refetch]);
 
   return (
     <View style={styles.container}>
@@ -39,47 +124,7 @@ export default function SiteDiaryDetailsPage() {
           },
         }}
       />
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
-          <CustomText variant="secondary" style={styles.loadingText}>
-            Loading site diary...
-          </CustomText>
-        </View>
-      ) : error ? (
-        <View style={styles.centerContainer}>
-          <Ionicons 
-            name={isOffline ? "cloud-offline-outline" : "alert-circle-outline"} 
-            size={48} 
-            color="#ef4444" 
-          />
-          <CustomText variant="bodyMedium" style={styles.errorText}>
-            {getErrorMessage()}
-          </CustomText>
-          {!isOffline && (
-            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-              <Ionicons name="refresh" size={16} color="#fff" style={styles.retryIcon} />
-              <CustomText variant="bodyMedium" style={styles.retryButtonText}>
-                {isRefetching ? 'Retrying...' : 'Retry'}
-              </CustomText>
-            </TouchableOpacity>
-          )}
-          {isOffline && (
-            <CustomText variant="secondarySmall" style={styles.offlineHint}>
-              Connect to the internet to view this site diary
-            </CustomText>
-          )}
-        </View>
-      ) : siteDiary ? (
-        <SiteDiaryDetails siteDiary={siteDiary} />
-      ) : (
-        <View style={styles.centerContainer}>
-          <Ionicons name="document-outline" size={48} color="#6b7280" />
-          <CustomText variant="bodyMedium" style={styles.errorText}>
-            Site diary not found
-          </CustomText>
-        </View>
-      )}
+      {content}
     </View>
   );
 }
