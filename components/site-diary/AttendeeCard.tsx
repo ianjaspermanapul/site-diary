@@ -27,9 +27,6 @@ export const AttendeeCard = ({ name, role }: Props) => {
         </CustomText>
         {role && <CustomText variant="secondarySmall">{role}</CustomText>}
       </View>
-      <TouchableOpacity>
-        <Ionicons name="ellipsis-vertical" size={20} color="#9ca3af" />
-      </TouchableOpacity>
     </View>
   );
 };
